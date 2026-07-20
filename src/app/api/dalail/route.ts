@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       sql += " WHERE " + conditions.join(" AND ");
     }
 
-    sql += " ORDER BY rowid DESC";
+    sql += " ORDER BY id DESC";
 
     const result = await db.execute(sql, args);
 

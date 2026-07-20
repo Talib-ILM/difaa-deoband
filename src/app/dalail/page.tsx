@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, BookOpen } from "lucide-react";
+import { Search, BookOpen, X } from "lucide-react";
 import { useLanguage } from "@/lib/context";
 import { useDarkMode } from "@/lib/darkmode";
 
@@ -43,6 +43,7 @@ export default function DalailPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [error, setError] = useState<string | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<DalailRecord | null>(null);
 
   const fetchRecords = useCallback(async (query: string, category: string) => {
     setLoading(true);
@@ -73,6 +74,20 @@ export default function DalailPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [search, activeCategory, fetchRecords]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedRecord(null);
+    };
+    if (selectedRecord) {
+      document.addEventListener("keydown", handleEsc);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
+    };
+  }, [selectedRecord]);
 
   const labels = categoryLabels[language] || categoryLabels.en;
 
@@ -209,7 +224,8 @@ export default function DalailPage() {
               {records.map((record) => (
                 <div
                   key={record.id}
-                  className={`rounded-lg p-8 transition-shadow hover:shadow-lg ${
+                  onClick={() => setSelectedRecord(record)}
+                  className={`cursor-pointer rounded-lg p-8 transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] ${
                     dark
                       ? "border border-dark-border bg-dark-surface"
                       : "bg-surface"
@@ -242,12 +258,119 @@ export default function DalailPage() {
                     }}
                     dangerouslySetInnerHTML={{ __html: getContentPreview(record) }}
                   />
+                  {getContentPreview(record) && (
+                    <p
+                      className={`mt-3 text-xs font-semibold ${
+                        dark ? "text-dark-primary" : "text-primary"
+                      }`}
+                      style={{ fontFamily }}
+                    >
+                      {language === "en" ? "Read dalail →" : language === "ar" ? "اقرأ الدليل ←" : "دلائل پڑھیں ←"}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
       </section>
+
+      {/* Dalail Modal */}
+      {selectedRecord && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setSelectedRecord(null)}
+        >
+          <div
+            className={`relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-8 ${
+              dark
+                ? "border border-dark-border bg-dark-surface"
+                : "bg-white"
+            }`}
+            dir={isRtl ? "rtl" : "ltr"}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedRecord(null)}
+              className={`absolute end-4 top-4 rounded-full p-2 transition-colors ${
+                dark
+                  ? "hover:bg-dark-border text-dark-text-secondary"
+                  : "hover:bg-neutral/10 text-text-secondary"
+              }`}
+            >
+              <X size={20} />
+            </button>
+
+            <h2
+              className={`text-2xl font-bold ${dark ? "text-dark-text" : "text-text-primary"}`}
+              style={{ fontFamily }}
+            >
+              {selectedRecord.title}
+            </h2>
+            <span
+              className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                dark
+                  ? "bg-dark-border text-dark-primary"
+                  : "bg-primary/10 text-primary"
+              }`}
+              style={{ fontFamily }}
+            >
+              {labels[selectedRecord.category] || selectedRecord.category}
+            </span>
+
+            <div className="mt-6 space-y-4">
+              {selectedRecord.content_english && (
+                <div
+                  dir="ltr"
+                  className={`rounded-lg p-4 text-sm leading-relaxed ${
+                    dark
+                      ? "bg-dark-background text-dark-text-secondary"
+                      : "bg-secondary text-text-secondary"
+                  }`}
+                  style={{ fontFamily }}
+                >
+                  <p className={`mb-2 text-xs font-bold uppercase tracking-wide ${dark ? "text-dark-primary" : "text-primary"}`}>
+                    English
+                  </p>
+                  <div dangerouslySetInnerHTML={{ __html: selectedRecord.content_english }} />
+                </div>
+              )}
+              {selectedRecord.content_arabic && (
+                <div
+                  dir="rtl"
+                  className={`rounded-lg p-4 text-sm leading-relaxed ${
+                    dark
+                      ? "bg-dark-background text-dark-text-secondary"
+                      : "bg-secondary text-text-secondary"
+                  }`}
+                  style={{ fontFamily: "'Scheherazade New', serif" }}
+                >
+                  <p className={`mb-2 text-xs font-bold uppercase tracking-wide text-left ${dark ? "text-dark-primary" : "text-primary"}`}>
+                    العربية
+                  </p>
+                  <div dangerouslySetInnerHTML={{ __html: selectedRecord.content_arabic }} />
+                </div>
+              )}
+              {selectedRecord.content_urdu && (
+                <div
+                  dir="rtl"
+                  className={`rounded-lg p-4 text-sm leading-relaxed ${
+                    dark
+                      ? "bg-dark-background text-dark-text-secondary"
+                      : "bg-secondary text-text-secondary"
+                  }`}
+                  style={{ fontFamily: "'Noto Nastaliq Urdu', serif" }}
+                >
+                  <p className={`mb-2 text-xs font-bold uppercase tracking-wide text-left ${dark ? "text-dark-primary" : "text-primary"}`}>
+                    اردو
+                  </p>
+                  <div dangerouslySetInnerHTML={{ __html: selectedRecord.content_urdu }} />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
