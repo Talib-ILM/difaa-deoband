@@ -14,12 +14,10 @@ interface DalailRecord {
   content_arabic: string;
 }
 
-const CATEGORIES = ["All", "Aqeedah", "Fiqh", "History", "Hadith", "Tafseer"];
-
-const categoryLabels: Record<string, Record<string, string>> = {
-  en: { All: "All", Aqeedah: "Aqeedah", Fiqh: "Fiqh", History: "History", Hadith: "Hadith", Tafseer: "Tafseer" },
-  ar: { All: "الكل", Aqeedah: "العقيدة", Fiqh: "الفقه", History: "التاريخ", Hadith: "الحديث", Tafseer: "التفسير" },
-  ur: { All: "سب", Aqeedah: "عقیدہ", Fiqh: "فقہ", History: "تاریخ", Hadith: "حدیث", Tafseer: "تفسیر" },
+const categoryLabels: Record<string, string> = {
+  en: "All",
+  ar: "الكل",
+  ur: "سب",
 };
 
 const emptyStateText: Record<string, string> = {
@@ -45,13 +43,12 @@ export default function DalailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<DalailRecord | null>(null);
 
-  const fetchRecords = useCallback(async (query: string, category: string) => {
+  const fetchRecords = useCallback(async (query: string) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
       if (query) params.set("q", query);
-      if (category !== "All") params.set("category", category);
 
       const res = await fetch(`/api/dalail?${params.toString()}`);
       if (!res.ok) {
@@ -70,10 +67,10 @@ export default function DalailPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchRecords(search, activeCategory);
+      fetchRecords(search);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, activeCategory, fetchRecords]);
+  }, [search, fetchRecords]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -90,6 +87,13 @@ export default function DalailPage() {
   }, [selectedRecord]);
 
   const labels = categoryLabels[language] || categoryLabels.en;
+
+  const categories = ["All", ...Array.from(new Set(records.map((r) => r.category).filter(Boolean)))];
+
+  const filteredRecords = records.filter((r) => {
+    if (activeCategory !== "All" && r.category !== activeCategory) return false;
+    return true;
+  });
 
   const getContentPreview = (record: DalailRecord): string => {
     if (language === "ar" && record.content_arabic) return record.content_arabic;
@@ -154,7 +158,7 @@ export default function DalailPage() {
 
           {/* Category Filter Tags */}
           <div className="mb-10 flex flex-wrap justify-center gap-3">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -167,7 +171,7 @@ export default function DalailPage() {
                 }`}
                 style={{ fontFamily }}
               >
-                {labels[cat] || cat}
+                {cat === "All" ? labels : cat}
               </button>
             ))}
           </div>
@@ -206,6 +210,19 @@ export default function DalailPage() {
           )}
 
           {/* Empty State */}
+          {!loading && !error && records.length > 0 && filteredRecords.length === 0 && (
+            <div className="text-center py-16">
+              <BookOpen size={48} className="mx-auto mb-4 text-neutral opacity-40" />
+              <p
+                className="text-base text-text-secondary dark:text-dark-text-secondary"
+                style={{ fontFamily }}
+              >
+                {emptyStateText[language] || emptyStateText.en}
+              </p>
+            </div>
+          )}
+
+          {/* Empty State (no records at all) */}
           {!loading && !error && records.length === 0 && (
             <div className="text-center py-16">
               <BookOpen size={48} className="mx-auto mb-4 text-neutral opacity-40" />
@@ -219,9 +236,9 @@ export default function DalailPage() {
           )}
 
           {/* Records Grid */}
-          {!loading && !error && records.length > 0 && (
+          {!loading && !error && filteredRecords.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {records.map((record) => (
+              {filteredRecords.map((record) => (
                 <div
                   key={record.id}
                   onClick={() => setSelectedRecord(record)}
@@ -245,7 +262,7 @@ export default function DalailPage() {
                         : "bg-primary/10 text-primary"
                     }`}
                   >
-                    {labels[record.category] || record.category}
+                    {record.category}
                   </span>
                   <p
                     className={`mt-4 text-sm leading-relaxed line-clamp-3 ${
@@ -313,7 +330,7 @@ export default function DalailPage() {
               }`}
               style={{ fontFamily }}
             >
-              {labels[selectedRecord.category] || selectedRecord.category}
+              {selectedRecord.category}
             </span>
 
             <div className="mt-6 space-y-4">
