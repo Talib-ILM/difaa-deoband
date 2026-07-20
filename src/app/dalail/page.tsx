@@ -53,11 +53,14 @@ export default function DalailPage() {
       if (category !== "All") params.set("category", category);
 
       const res = await fetch(`/api/dalail?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.details || err.error || "Failed to fetch");
+      }
       const data = await res.json();
       setRecords(data.records || []);
-    } catch {
-      setError("Failed to load records. Please check that PocketBase is running.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load records");
       setRecords([]);
     } finally {
       setLoading(false);

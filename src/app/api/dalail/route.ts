@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPocketBase } from "@/lib/pocketbase";
+import { getTurso } from "@/lib/turso";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -7,28 +7,34 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get("category") || "";
 
   try {
-    const pb = getPocketBase();
+    const db = getTurso();
 
-    const filterParts: string[] = [];
+    let sql = "SELECT * FROM dalail";
+    const conditions: string[] = [];
+    const args: string[] = [];
 
     if (q) {
-      filterParts.push(
-        `(title ~ "${q}" || content_english ~ "${q}" || content_urdu ~ "${q}" || content_arabic ~ "${q}")`
+      conditions.push(
+        "(title LIKE ? OR content_english LIKE ? OR content_urdu LIKE ? OR content_arabic LIKE ?)"
       );
+      const like = `%${q}%`;
+      args.push(like, like, like, like);
     }
 
     if (category && category !== "All") {
-      filterParts.push(`category = "${category}"`);
+      conditions.push("category = ?");
+      args.push(category);
     }
 
-    const filter = filterParts.length > 0 ? filterParts.join(" && ") : "";
+    if (conditions.length > 0) {
+      sql += " WHERE " + conditions.join(" AND ");
+    }
 
-    const result = await pb.collection("dalail").getList(1, 100, {
-      filter,
-      sort: "-created",
-    });
+    sql += " ORDER BY rowid DESC";
 
-    return NextResponse.json({ records: result.items, total: result.totalItems });
+    const result = await db.execute(sql, args);
+
+    return NextResponse.json({ records: result.rows, total: result.rows.length });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
