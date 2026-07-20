@@ -247,17 +247,15 @@ export default function DalailPage() {
                   >
                     {labels[record.category] || record.category}
                   </span>
-                  <div
-                    className="mt-4 overflow-hidden text-sm leading-relaxed text-text-secondary dark:text-dark-text-secondary"
+                  <p
+                    className={`mt-4 text-sm leading-relaxed line-clamp-3 ${
+                      dark ? "text-dark-text-secondary" : "text-text-secondary"
+                    }`}
                     dir={isRtl ? "rtl" : "ltr"}
-                    style={{
-                      fontFamily,
-                      maxHeight: "120px",
-                      maskImage: "linear-gradient(to bottom, black 60%, transparent)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent)",
-                    }}
-                    dangerouslySetInnerHTML={{ __html: getContentPreview(record) }}
-                  />
+                    style={{ fontFamily }}
+                  >
+                    {getContentPreview(record).replace(/<[^>]+>/g, "")}
+                  </p>
                   {getContentPreview(record) && (
                     <p
                       className={`mt-3 text-xs font-semibold ${
