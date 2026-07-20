@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Light Mode */
+  --color-primary: #4CAF50;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #FDFCF8;
+  --color-tertiary: #D4A84B;
+  --color-neutral: #6B6B6B;
+  --color-surface: #F1F8E9;
+  --color-text-primary: #2C2C2C;
+  --color-text-secondary: #6B6B6B;
+  --color-border: #E0DDD4;
+
+  /* Dark Mode */
+  --color-dark-primary: #66BB6A;
+  --color-dark-background: #1A1A1A;
+  --color-dark-surface: #1E2A1E;
+  --color-dark-text: #F0EDE6;
+  --color-dark-text-secondary: #B0ADA4;
+  --color-dark-border: #2E3A2E;
+
+  /* Functional */
+  --color-success: #4CAF50;
+  --color-discord-blue: #5865F2;
+  --color-discord-green: #57F287;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Font families */
+  --font-playfair: 'Playfair Display', serif;
+  --font-scheherazade: 'Scheherazade New', serif;
+  --font-nastaliq: 'Noto Nastaliq Urdu', serif;
+}
+
+body {
+  font-family: 'Playfair Display', serif;
+  background: #FDFCF8;
+  color: #2C2C2C;
+}
+
+.dark body,
+.dark {
+  background: #1A1A1A;
+  color: #F0EDE6;
+}
+
+/* RTL support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Skeleton loading animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.skeleton-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FDFCF8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E0DDD4;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #2E3A2E;
+}
