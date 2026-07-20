@@ -34,7 +34,16 @@ export async function GET(request: NextRequest) {
 
     const result = await db.execute(sql, args);
 
-    return NextResponse.json({ records: result.rows, total: result.rows.length });
+    const records = result.rows.map((row: Record<string, unknown>) => ({
+      id: String(row.id),
+      title: String(row.title ?? ""),
+      category: String(row.category ?? ""),
+      content_english: String(row.content_english ?? ""),
+      content_urdu: String(row.content_urdu ?? ""),
+      content_arabic: String(row.content_arabic ?? ""),
+    }));
+
+    return NextResponse.json({ records, total: records.length });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
